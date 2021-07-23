@@ -16,7 +16,7 @@ for fol=1:numel(folderList)
     numfiles = numel(jpegFiles);
     jpegFiles=jpegFiles(randperm(numfiles));
     for k = 1:fix(numfiles/2) 
-%% Run default embedding                                                    % Every embedding algorithm has it's own parameters
+%% Running default embedding                                                % Every embedding algorithm has it's own parameters
         coverPath=fullfile('..',folderName,jpegFiles(k).name);              
         if folderName(1:3)=="MG_"                                           % Selecting embedding algorithm depending on the folder name
             [stego, pChange, ChangeRate] = MG( coverPath, Payload );
