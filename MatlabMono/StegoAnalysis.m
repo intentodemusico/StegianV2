@@ -1,20 +1,22 @@
 %% Common procedures avanzar de 0.5 en 0.5 con 100 img
 clc; clear all;
 %% Variables instantiating
-payloadList=(0.05:0.05:0.3);                                              %% List of selected payloads, which will be used by index-selection depending on the last two digits from the selected folder in folderList %%
+payloadList=[0.22784372 0.40060288 0.57336204 0.74612121 0.91888037 1.09163953];                                              %% List of selected payloads, which will be used by index-selection depending on the last two digits from the selected folder in folderList %%
 
 errorFlag=0;                                                               %% This flag keeps the error state of the code: 1 for error encountered, 0 for no bad news %%
 
 windowSize=256;                                                            %% This variable is used to manually select the window size that will be used for the analysis %%
 
-imgRes=256;                  
-%% This variable refers to the imgRes*imgRes*3 image resolution %%
+imagesFolder="MonoImages";
 
-imgCount=25; %5K img                                                        %% This is the number of images to be analyzed %%
+imgRes=256;                                                                %% This variable refers to the imgRes*imgRes*3 image resolution %%
 
-dataFolderName="Stego-Cover_OnlyCustomPayloads_imageRes-"+imgRes+"_windowSize-"+windowSize+"_"+imgCount+"-images"; 
+imgCount=100; %5K img                                                       %% This is the number of images to be analyzed %%
 
-folderList=["S-Uniward_01","WOW_01"];%"HUGO_01", ...%"HUGO_02","HUGO_03","HUGO_04","HUGO_05", ...
+dataFolderName="PresumablePayloads_WOW"+imgRes+"_"+imgCount+"-images"; 
+mkdir(fullfile("..","DataAnalysis","Mono",dataFolderName));
+
+folderList=["WOW_01"];%"HUGO_01", ...%"HUGO_02","HUGO_03","HUGO_04","HUGO_05", ...
     %"MG_01", %"MiPOD_01","MVG_01","MVG_02", ...
     
 
@@ -22,7 +24,7 @@ folderList=["S-Uniward_01","WOW_01"];%"HUGO_01", ...%"HUGO_02","HUGO_03","HUGO_0
 
 pixelDistribution = containers.Map(folderList,0.*(1:numel(folderList)));
 data=strings((numel(folderList)*imgCount)*numel(payloadList)+1,imgRes /windowSize*2+7); % cantidad de windows por imagen
-jpegFiles = dir(fullfile('..','BaseImages')); 
+jpegFiles = dir(fullfile('..',imagesFolder)); 
 jpegFiles=jpegFiles(3:end);
 numfiles = numel(jpegFiles);
 %jpegFiles=jpegFiles(randperm(numfiles));
@@ -52,7 +54,8 @@ for folderIndex=1:numel(folderList)                                        %% Ru
         %fprintf(" Index: "+dataIndex+" Img: "+imgIndex+".");
         
         % Run default embedding
-        coverPath=fullfile('..','BaseImages',jpegFiles(imgIndex).name);
+        coverPath=fullfile('..',imagesFolder,jpegFiles(imgIndex).name);
+        cover=double(imread(coverPath));
         %tic
         if folderName(1:2)=="MG"
             [stego, pChange, ChangeRate] = MG( coverPath, payload );
@@ -60,7 +63,7 @@ for folderIndex=1:numel(folderList)                                        %% Ru
             [stego, pChange_P, ChangeRate_P] = MVG( coverPath, payload );
         elseif folderName(1:3)=="WOW"
             params.p = -1;
-            [stego, distortion] = WOW(coverPath, payload, params);
+            [stego, distortion] = WOW(cover, payload, params);
         elseif folderName(1:4)=="HUGO"
             params.gamma = 1;
             params.sigma = 1;
@@ -68,14 +71,13 @@ for folderIndex=1:numel(folderList)                                        %% Ru
         elseif folderName(1:5)=="MiPOD"
             [stego, pChange, ChangeRate] = MiPOD( coverPath, payload );
         elseif folderName(1:9)=="S-Uniward"
-            [stego, distortion]=S_UNIWARD(coverPath, payload);
+             stego = S_UNIWARD(coverPath, payload);
         else
             fprintf("\n\n\n\n\n\nERROR: Got "+folderName+" as a folder name, it doesn't fit in the requirements. Try checking string/chars errors.\n\n\n\n\n\n")
             errorFlag=1;
             break
         end
         %toc
-        cover=imread(coverPath);
         img=imdiff(cover,stego);%imfuse(cover,stego,'diff');
         
         % Plot lines ############################################################################
@@ -101,7 +103,7 @@ for folderIndex=1:numel(folderList)                                        %% Ru
 end
 
 % Data
-data(end,1)="Algorithm-payload tuple";
+data(end,1)="Algorithm";
 data(end,2)="Image index";
 data(end,end-1)="Calculated payload";
 data(end,end-2)="Payload";
@@ -116,8 +118,8 @@ end
 data
 fprintf("\n\n\nFinished")
 %% Saving data
-savingPath="Data_imageRes-"+imgRes+"_windowSize-"+windowSize+".csv";
-writematrix(data,fullfile("..","DataAnalysis",dataFolderName,savingPath)); 
+savingPath="Data_imageRes-"+imgRes+".csv";
+writematrix(data,fullfile("..","DataAnalysis","Mono",dataFolderName,savingPath)); 
 
 %% Functions
 function result = pixDist(img,windowSize,imgRes,imageIndex,dataIndex,pay)
@@ -132,13 +134,9 @@ function result = pixDist(img,windowSize,imgRes,imageIndex,dataIndex,pay)
         end1=axe1*windowSize;
         for axe2 = 1:imgRes/windowSize
             end2=axe2*windowSize;
-            imgCropped=img(start1:end1,start2:end2,:); %Now there's 3 channels
-            count=alteredPixelCount(imgCropped); %Now there's 3 channels
+            imgCropped=img(start1:end1,start2:end2); %Now there's 1 channel
+            count=alteredPixelCount(imgCropped); %Now there's 1 channel
             result(end-3)=changeCount(img);
-%           disp(unique(imgCropped));
-%           disp(count);
-%           disp(sum(sum(img==255))/(sum(sum(img==255))+sum(sum(img==0))));
-%           disp((sum(sum(img==255))+sum(sum(img==0))));
             calculatedPayload=count/power(windowSize,2);
             
             % Plot line
@@ -157,11 +155,11 @@ function result = pixDist(img,windowSize,imgRes,imageIndex,dataIndex,pay)
 end
 
 function aPCount = alteredPixelCount(img)
-    aPCount=sum(sum(sum(img>0)));
+    aPCount=sum(sum(img>0));
 end
 
 function cCount = changeCount(img)
-    cCount=sum(sum(sum(img)));
+    cCount=sum(sum(img));
 end
 
 function diff = imdiff(stego,cover)
