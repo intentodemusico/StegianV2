@@ -126,10 +126,12 @@ dmypy.json
 
 # Datasets
 BaseImages/
+Dataset/
 ReadySamples/
 full/
 MonoImage/
 128images
+samples/
 
 # Data analysis
 DataAnalysis/
