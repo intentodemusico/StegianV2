@@ -132,7 +132,7 @@ full/
 MonoImage/
 128images
 samples/
-
+samples-copy/
 # Data analysis
 DataAnalysis/
 Matlab/test.m
