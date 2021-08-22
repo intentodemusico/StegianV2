@@ -37,7 +37,7 @@ def calculations(img,channel):
     
 
     #Getting atributes
-    attributes=np.zeros(8,dtype=np.longdouble)#.astype(object)
+    attributes=[0]*8
     
     #Kurtosis 
     attributes[0]=sts.kurtosis(trace)
@@ -60,13 +60,18 @@ def calculations(img,channel):
     return attributes
 
 def attributes(img,windowSize):
-    if(img.shape(0)/windowSize%1!=0): 
+    if(img.shape[0]/windowSize%1!=0): 
         return False
-    windowCount=img.shape(0)/windowSize
-    channels=1 if len(img.shape)<2 else 3
-    fullAttributes=np.zeros(0,dtype=np.longdouble)
+    windowCount=img.shape[0]//windowSize
+    channels=1 if len(img.shape)<=2 else 3
+    fullAttributes=np.zeros((windowCount**2,8),dtype=np.longdouble)
+    window=-1
     for channel in range(channels):
         for axe0 in range(windowCount):
             for axe1 in range(windowCount):
-                np.append(fullAttributes,calculations(img[windowSize*axe0:windowSize*(axe0+1),windowSize*axe1:windowSize*(axe1+1)],channel))
+                window+=1
+                attrs=calculations(img[windowSize*axe0:windowSize*(axe0+1),windowSize*axe1:windowSize*(axe1+1)],channel)
+                for attrIndex in in range (8):
+                    fullAttributes[window][attrIndex]=attrs[attrIndex]
+                    index+=1 
     return fullAttributes
