@@ -64,14 +64,12 @@ def attributes(img,windowSize):
         return False
     windowCount=img.shape[0]//windowSize
     channels=1 if len(img.shape)<=2 else 3
-    fullAttributes=np.zeros((windowCount**2,8),dtype=np.longdouble)
-    window=-1
+    fullAttributes=np.zeros(windowCount**2*8,dtype=np.longdouble)
+    index=0
     for channel in range(channels):
         for axe0 in range(windowCount):
             for axe1 in range(windowCount):
-                window+=1
-                attrs=calculations(img[windowSize*axe0:windowSize*(axe0+1),windowSize*axe1:windowSize*(axe1+1)],channel)
-                for attrIndex in in range (8):
-                    fullAttributes[window][attrIndex]=attrs[attrIndex]
+                for attr in calculations(img[windowSize*axe0:windowSize*(axe0+1),windowSize*axe1:windowSize*(axe1+1)],channel):
+                    fullAttributes[index]=attr #####FIX INDEX Y TALES
                     index+=1 
     return fullAttributes
