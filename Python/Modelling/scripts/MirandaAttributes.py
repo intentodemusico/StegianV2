@@ -18,29 +18,68 @@ import numpy as np
 import pandas as pd
 import scipy.stats as sts
 from pandas import DataFrame
-import univariate as univariate
 from scipy.stats.mstats import gmean
+from scipy.spatial.distance import cdist, euclidean
 
-#%%
+#%% Custom Hjorth params
 def hjorth_params(trace):
-    return univariate.hjorth(trace)
+    first_deriv = np.diff(trace)
+    second_deriv = np.diff(trace,2)
+
+    var_zero = np.var(trace)
+    var_d1 = np.var(first_deriv)
+    var_d2 = np.var(second_deriv)
+
+    activity = var_zero
+    mobility = np.sqrt(var_d1 / var_zero)
+    complexity = np.sqrt(var_d2 / var_d1) / mobility
+
+    return activity, mobility, complexity
+
+def geometric_median(X, eps=1e-5):
+    y = np.mean(X, 0)
+
+    while True:
+        D = cdist(X, [y])
+        nonzeros = (D != 0)[:, 0]
+
+        Dinv = 1 / D[nonzeros]
+        Dinvs = np.sum(Dinv)
+        W = Dinv / Dinvs
+        T = np.sum(W * X[nonzeros], 0)
+
+        num_zeros = len(X) - np.sum(nonzeros)
+        if num_zeros == 0:
+            y1 = T
+        elif num_zeros == len(X):
+            return y
+        else:
+            R = (T - y) * Dinvs
+            r = np.linalg.norm(R)
+            rinv = 0 if r == 0 else num_zeros/r
+            y1 = max(0, 1-rinv)*T + min(1, rinv)*y
+
+        if euclidean(y, y1) < eps:
+            return y1
+
+        y = y1
 
 def calculations(img,channel):
     #Preprocessing
     #If image is mono, 0 is passed as channel, else, every channel will be passed independently
     hist = cv2.calcHist([img],[channel],None,[256],[0,256])
-
+    
     trace=hist.reshape(256)
     
-    #Custom trace for avoiding zero log error
-    gTrace=trace[trace>0]
+    #Custom trace for avoiding zero log error CHECK THIS PLS
+    gTrace=trace[trace!=0]
     
 
     #Getting atributes
-    attributes=[0]*8
+    attributes=[0]*9
     
     #Kurtosis 
-    attributes[0]=sts.kurtosis(trace)
+    attributes[0]=sts.kurtosis(hist,fisher=False)
     #Skewness
     attributes[1]=sts.skew(trace)
     #Std
@@ -49,27 +88,31 @@ def calculations(img,channel):
     attributes[3]=np.ptp(trace)
     #Median 
     attributes[4]=np.median(trace)
-    #Geometric_Mean 
+    #Garcia-Geometric_Mean 
     attributes[5]=gmean(gTrace)
+    #Epsilon Geometric_Mean
+    attributes[6]=gmean(trace+1)
     #Hjorth
-    a,mor, comp= hjorth_params(trace)
+    act,mob, comp= hjorth_params(trace)
     #Mobility 
-    attributes[6]=mor
+    attributes[7]=mob
     #Complexity
-    attributes[7]=comp
+    attributes[8]=comp
+
     return attributes
 
-def attributes(img,windowSize):
+def attributes(img,windowSize,gray):
     if(img.shape[0]/windowSize%1!=0): 
         return False
     windowCount=img.shape[0]//windowSize
-    channels=1 if len(img.shape)<=2 else 3
-    fullAttributes=np.zeros(windowCount**2*8,dtype=np.longdouble)
+   
+    channels=1 if gray else 3
+    fullAttributes=np.zeros(windowCount**2*9,dtype=np.longdouble)
     index=0
     for channel in range(channels):
         for axe0 in range(windowCount):
             for axe1 in range(windowCount):
-                for attr in calculations(img[windowSize*axe0:windowSize*(axe0+1),windowSize*axe1:windowSize*(axe1+1)],channel):
+                for attr in calculations(img[windowSize*axe0:windowSize*(axe0+1),windowSize*axe1:windowSize*(axe1+1)],channels):
                     fullAttributes[index]=attr #####FIX INDEX Y TALES
                     index+=1 
     return fullAttributes
