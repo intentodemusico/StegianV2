@@ -1,0 +1,3 @@
+This is a dataset consisting of 8 features extracted from 70,000 monochromatic still images adapted from the Genome Project Standford's database, that are labeled in two classes: with (1) and without (0) LSB Steganograhy. These features are: Kurtosis, Skewness, Standard Deviation, Range, Median, Geometric Mean, Hjorth Mobility, and Hjorth Complexity, all extracted from the histograms of the still images.
+
+ The steganographic function embeds five types of payloads, from 0.1 to 0.5. The training dataset includes 56,000 of these pair of labeled images (with and without LSB Steganograhy), with which 5,600 images conform the dataset for each payload. Testing dataset has 14,000 observations and is equally divided as the training dataset.

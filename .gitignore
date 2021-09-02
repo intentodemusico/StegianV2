@@ -127,6 +127,7 @@ dmypy.json
 # Datasets
 BaseImages/
 Dataset/
+Datasets/
 ReadySamples/
 full/
 MonoImage/
