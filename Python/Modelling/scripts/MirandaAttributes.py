@@ -39,7 +39,7 @@ def hjorth_params(trace):
 def calculations(img,channel):
     #Preprocessing
     #If image is mono, 0 is passed as channel, else, every channel will be passed independently
-    hist = cv2.calcHist([img],[channel],None,[256],[0,256])
+    hist = cv2.calcHist([img],[0 if channel==1 else channel],None,[256],[0,256])
     
     trace=hist.reshape(256)
     
