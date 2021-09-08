@@ -46,7 +46,7 @@ F{3} = hpdf'*hpdf;
 
 %% Get embedding costs
 % inicialization
-coverOriginal = double(imread(cover));
+coverOriginal = double(cover);
 % random channel selection
 channel=randi([1,3]);
 cover=coverOriginal(:,:,channel);

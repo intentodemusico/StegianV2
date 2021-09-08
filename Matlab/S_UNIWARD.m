@@ -1,4 +1,4 @@
-function [stego, distortion] = S_UNIWARD(coverPath, payload)
+function [stego, distortion] = S_UNIWARD(coverP, payload)
 % -------------------------------------------------------------------------
 % Copyright (c) 2013 DDE Lab, Binghamton University, NY.
 % All Rights Reserved.
@@ -46,7 +46,7 @@ F{3} = hpdf'*hpdf;
 
 %% Get embedding costs
 % inicialization
-coverOriginal = double(imread(coverPath));
+coverOriginal = double(coverP);
 % random channel selection
 channel=randi([1,3]);
 cover=coverOriginal(:,:,channel);
