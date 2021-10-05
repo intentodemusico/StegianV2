@@ -21,9 +21,11 @@ from flask_cors import CORS, cross_origin
 
 #%% Importing model
 from tensorflow import keras
-model = keras.models.load_model('my_model.h5')
 print("modelo importado")
 
+model = tf.keras.models.load_model('../models/CNNvFinal.h5', custom_objects={"precision_m": precision_m, "f1_m":f1_m,"recall_m":recall_m})
+model.summary()
+model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy', f1_m ,precision_m,recall_m])
 
 #%%
 def pred(csvName):
@@ -39,45 +41,6 @@ def pred(csvName):
     
 
 #%%
-def hjorth_params(trace):
-    return univariate.hjorth(trace)
-
-def attributes(location):
-    img = cv2.imread(location,0)
-      
-    #Preprocessing
-    #If image is monochromatic
-    hist = cv2.calcHist([img],[0],None,[256],[0,256])
-    #Else 
-    #Gray scale
-    
-    trace=hist.reshape(256)
-    
-    #gTrace=trace[trace>0]
-    
-    #Getting atributes
-    attributes=np.zeros(8)#.astype(object)
-    
-    #Kurtosis 
-    attributes[0]=str(sts.kurtosis(trace))
-    #Skewness
-    attributes[1]=str(sts.skew(trace))
-    #Std
-    attributes[2]=str(np.std(trace))
-    #Range
-    attributes[3]=str(np.ptp(trace))
-    #Median 
-    attributes[4]=str(np.median(trace))
-    #Geometric_Mean 
-    attributes[5]=str(gmean(trace))
-    #Hjorth
-    a,mor, comp= hjorth_params(trace)
-    #Mobility 
-    attributes[6]=str(mor)
-    #Complexity
-    attributes[7]=str(comp)
-    return attributes
-
 save_path='./csv'
 #%%
 app = FlaskAPI(__name__)
@@ -113,17 +76,8 @@ def result():
         # Write image to static directory
         imgLocation=os.path.join("./UPLOAD_FOLDER", img_name)
         img_file.save(imgLocation)
-        
-        attr=attributes(imgLocation)
-        
-        ##Saving image atributes in csv -> guardo nombre con timestamp en csv/$csvName
-        csvName=str(datetime.now()).split(" ")[0]+"_"+str(datetime.now()).split(" ")[1].split(".")[0]+".csv"
-        
-        #saveCsv="csv/"+str(csvName)
-        csvName=img_name[:-4]+csvName.replace(":","-")
-        completeName = os.path.join(save_path, csvName)        
-        np.savetxt(completeName,attr, delimiter=",")
-        result= pred(completeName)
+             
+        result= pred(imgLocation)
         #result=random.uniform(0,1) 
         data={'result': str(result)} 
         
