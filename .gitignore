@@ -140,3 +140,4 @@ DataAnalysis/
 Matlab/test.m
 Python/Modelling/scripts/Untitled1.ipynb
 Python/Modelling/models/
+*.csv
